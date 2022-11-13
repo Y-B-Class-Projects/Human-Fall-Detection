@@ -128,6 +128,6 @@ def clean_images(folder_path, save_path):
         crop_humans_from_image(folder_path + '/' + file)
 
 
-# train()
-clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
-clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
+train(True)
+# clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
+# clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
