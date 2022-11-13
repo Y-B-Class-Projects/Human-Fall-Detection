@@ -33,8 +33,16 @@ def fall_detection(pose):
     len_factor = math.sqrt(((left_shoulder_y - left_body_y) ** 2 + (left_shoulder_x - left_body_x) ** 2))
     left_foot_y = pose[53]
     right_foot_y = pose[56]
+    p1 = (int(xmin), int(ymin))
+    p2 = (int(xmax), int(ymax))
+    dx = int(xmax) - int(xmin)
+    dy = int(ymax) - int(ymin)
+    difference = dy-dx
     if left_shoulder_y > left_foot_y - len_factor and left_body_y > left_foot_y - (
-            len_factor / 2) and left_shoulder_y > left_body_y - (len_factor / 2):
+            len_factor / 2) and left_shoulder_y > left_body_y - (len_factor / 2) or (
+                right_shoulder_y > right_foot_y - len_factor and right_body_y > right_foot_y - (
+                len_factor / 2) and right_shoulder_y > right_body_y - (len_factor / 2)) \
+            or difference < 0:
         return True
     return False
 
@@ -46,7 +54,6 @@ def get_data_from_images(folder_path):
         for file in tqdm(os.listdir(folder_path + '/' + folder)):
             pose = image_to_pose(folder_path + '/' + folder + '/' + file)
             if len(pose) >= 1:
-                pose = pose[0]
                 x.append(pose)
                 y.append(FALL if folder == 'fall' else NOT_FALL)
     return pd.DataFrame({'x': x, 'y': y})
@@ -76,7 +83,11 @@ def train(from_images=False):
     y_predict = []
 
     for i in range(len(x)):
-        y_predict.append(int(fall_detection(x[i])))
+        pred = False
+        for pose in x[i]:
+            if fall_detection(pose):
+                pred = True
+        y_predict.append(int(pred))
 
     # for y, y_pred in zip(y_test, y_predict):
     #     print('y', str(y), 'y_pred', str(int(y_pred)))
@@ -129,16 +140,14 @@ def clean_images(folder_path, save_path):
 
 def predict(image_url):
     urllib.request.urlretrieve(image_url, "image.png")
-    pose = image_to_pose("fall_dataset/images/fall/5_cropped_0.jpg")
-    if len(pose) >= 1:
-        pose = pose[0]
-        y_predict = int(fall_detection(pose))
-        print('y_predict', str(int(y_predict)))
-        return int(y_predict)
-    return -1
+    poses = image_to_pose("fall_dataset/images/fall/5_cropped_0.jpg")
+    for pose in poses:
+        if fall_detection(pose):
+            return True
+    return False
 
 
 # predict('https://st2.depositphotos.com/1000393/9807/i/950/depositphotos_98078022-stock-photo-man-falling-down.jpg')
-train(True)
+train(False)
 # clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
 # clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
