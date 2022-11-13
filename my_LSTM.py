@@ -1,4 +1,6 @@
+import math
 import os
+import urllib
 
 import cv2
 import numpy as np
@@ -19,6 +21,24 @@ FALL = 1
 NOT_FALL = 0
 
 
+def fall_detection(pose):
+    xmin, ymin = (pose[2] - pose[4] / 2), (pose[3] - pose[5] / 2)
+    xmax, ymax = (pose[2] + pose[4] / 2), (pose[3] + pose[5] / 2)
+    left_shoulder_y = pose[23]
+    left_shoulder_x = pose[22]
+    right_shoulder_y = pose[26]
+    left_body_y = pose[41]
+    left_body_x = pose[40]
+    right_body_y = pose[44]
+    len_factor = math.sqrt(((left_shoulder_y - left_body_y) ** 2 + (left_shoulder_x - left_body_x) ** 2))
+    left_foot_y = pose[53]
+    right_foot_y = pose[56]
+    if left_shoulder_y > left_foot_y - len_factor and left_body_y > left_foot_y - (
+            len_factor / 2) and left_shoulder_y > left_body_y - (len_factor / 2):
+        return True
+    return False
+
+
 def get_data_from_images(folder_path):
     x = []
     y = []
@@ -26,14 +46,8 @@ def get_data_from_images(folder_path):
         for file in tqdm(os.listdir(folder_path + '/' + folder)[:3]):
             pose = image_to_pose(folder_path + '/' + folder + '/' + file)
             if len(pose) >= 1:
-                pose = pose[0][7:]
-                _pose = []
-                for i in range(17):  # 17 keypoints
-                    _x = pose[3 * i]
-                    _y = pose[3 * i + 1]
-                    _pose.append(_x)
-                    _pose.append(_y)
-                x.append(_pose)
+                pose = pose[0]
+                x.append(pose)
                 y.append(FALL if folder == 'fall' else NOT_FALL)
     return pd.DataFrame({'x': x, 'y': y})
 
@@ -61,35 +75,20 @@ def train(from_images=False):
     x_train = dataset[:, 0]
     y_train = dataset[:, 1]
 
-    x_train = [list(x) for x in x_train]
-    scaler = MinMaxScaler()
-    x_train = scaler.fit_transform(x_train)
-    x_train = [list(x) for x in x_train]
-
     # split into train and test sets
-    train_size = int(len(dataset) * 0.80)
+    train_size = int(len(dataset) * 0.60)
     x_train, x_test = x_train[0:train_size], x_train[train_size:len(dataset)]
     y_train, y_test = y_train[0:train_size], y_train[train_size:len(dataset)]
 
-    x_train = np.expand_dims(x_train, axis=0)
-    y_train = np.array(list(y_train))
-    y_train = y_train.reshape(1, -1)
-
-    x_test = [[x] for x in x_test]
-
-    model = Sequential()
-    model.add(LSTM(16, return_sequences=False, input_shape=(None, x_train.shape[2])))
-    model.add(Dense(1, activation='softmax'))
-    model.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(0.001))
-    model.fit(x=x_train, y=y_train)
-
-    y_predict = model.predict(x_test)
+    # y_predict = ...
     # for y, y_pred in zip(y_test, y_predict):
     #     print('y', str(y), 'y_pred', str(int(y_pred)))
 
     # accuracy: (tp + tn) / (p + n)
     y_test = list(y_test)
     y_predict = [int(y) for y in y_predict]
+
+    print('y_predict', y_predict)
 
     accuracy = accuracy_score(y_test, y_predict)
     print('Accuracy: %f' % accuracy)
@@ -128,6 +127,29 @@ def clean_images(folder_path, save_path):
         crop_humans_from_image(folder_path + '/' + file)
 
 
+def predict(image_url):
+    urllib.request.urlretrieve(image_url, "image.png")
+    pose = image_to_pose("image.png")
+    if len(pose) >= 1:
+        pose = pose[0][7:]
+        _pose = []
+        for i in range(17):  # 17 keypoints
+            _x = pose[3 * i]
+            _y = pose[3 * i + 1]
+            _pose.append(_x)
+            _pose.append(_y)
+        x = np.array(_pose)
+        scaler = MinMaxScaler()
+        x = scaler.fit_transform(x[:, np.newaxis])
+        x = [[[_x[0] for _x in x]]]
+        model = tf.keras.models.load_model('my_model')
+        y_predict = model.predict(x)
+        print('y_predict', str(int(y_predict)))
+        return int(y_predict[0][0])
+    return -1
+
+
+# predict('https://media.istockphoto.com/id/1307214736/photo/full-length-portrait-of-a-corpulent-mature-man-posing.jpg?b=1&s=170667a&w=0&k=20&c=7BWU__SfBwYmX9coO-_cy-mCrE0RTDXWIku9Jikggcc=')
 train(True)
 # clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
 # clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
