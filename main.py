@@ -81,6 +81,7 @@ while cap.isOpened:
                                          kpt_label=True)
         with torch.no_grad():
             output = output_to_keypoint(output)
+        image = cv2.imread(image)
         nimg = image[0].permute(1, 2, 0) * 255
         nimg = nimg.cpu().numpy().astype(np.uint8)
         nimg = cv2.cvtColor(nimg, cv2.COLOR_RGB2BGR)

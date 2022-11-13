@@ -18,6 +18,7 @@ if torch.cuda.is_available():
 def image_to_pose(path):
     image = cv2.imread(path)
     image = letterbox(image, 960, stride=64, auto=True)[0]
+    print('image shape: ', image.shape)
     image = transforms.ToTensor()(image)
     image = torch.tensor(np.array([image.numpy()]))
     if torch.cuda.is_available():
