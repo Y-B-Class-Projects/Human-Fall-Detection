@@ -106,7 +106,8 @@ def train(from_images=False):
 
 def crop_humans_from_image(image_path, save_path='fall_dataset/images/cropped_images'):
     img = Image.open(image_path)
-    img_name = image_path.split('/')[-1].split('.')[0]
+    img_name = '-'.join(image_path.split('/')[-1].split('.')[:-1])
+    img_type = image_path.split('/')[-1].split('.')[-1]
     w, h = img.size
     new_w, new_h = 960, int((960 / w) * h)
 
@@ -119,7 +120,7 @@ def crop_humans_from_image(image_path, save_path='fall_dataset/images/cropped_im
         xmin, ymin = xmin - 5, ymin - 5
         xmax, ymax = xmax + 5, ymax + 5
         crop = img.crop((xmin, ymin, xmax, ymax))
-        crop.save(save_path + '/' + img_name + '_cropped_' + str(idx) + '.jpg')
+        crop.save(save_path + '/' + img_name + '_cropped_' + str(idx) + '.' + img_type)
 
 
 def clean_images(folder_path, save_path):
