@@ -43,7 +43,7 @@ def get_data_from_images(folder_path):
     x = []
     y = []
     for folder in os.listdir(folder_path):
-        for file in tqdm(os.listdir(folder_path + '/' + folder)[:3]):
+        for file in tqdm(os.listdir(folder_path + '/' + folder)):
             pose = image_to_pose(folder_path + '/' + folder + '/' + file)
             if len(pose) >= 1:
                 pose = pose[0]
@@ -63,43 +63,43 @@ def load_data(folder_path):
 
 def train(from_images=False):
     if from_images:
-        data = get_data_from_images('fall_dataset/images')
+        data = get_data_from_images('fall_dataset/old')
         store_data(data, 'fall_dataset/data')
     else:
         data = load_data('fall_dataset/data')
 
     dataset = data.values
 
-    np.random.shuffle(dataset)
+    x = dataset[:, 0]
+    y = dataset[:, 1]
 
-    x_train = dataset[:, 0]
-    y_train = dataset[:, 1]
+    y_predict = []
 
-    # split into train and test sets
-    train_size = int(len(dataset) * 0.60)
-    x_train, x_test = x_train[0:train_size], x_train[train_size:len(dataset)]
-    y_train, y_test = y_train[0:train_size], y_train[train_size:len(dataset)]
+    for i in range(len(x)):
+        y_predict.append(int(fall_detection(x[i])))
 
-    # y_predict = ...
     # for y, y_pred in zip(y_test, y_predict):
     #     print('y', str(y), 'y_pred', str(int(y_pred)))
 
     # accuracy: (tp + tn) / (p + n)
-    y_test = list(y_test)
-    y_predict = [int(y) for y in y_predict]
+    y_predict = list(y_predict)
+    y = list(y)
 
     print('y_predict', y_predict)
+    print('y', y)
+    print(type(y_predict))
+    print(type(y))
 
-    accuracy = accuracy_score(y_test, y_predict)
+    accuracy = accuracy_score(y, y_predict)
     print('Accuracy: %f' % accuracy)
     # precision tp / (tp + fp)
-    precision = precision_score(y_test, y_predict)
+    precision = precision_score(y, y_predict)
     print('Precision: %f' % precision)
     # recall: tp / (tp + fn)
-    recall = recall_score(y_test, y_predict)
+    recall = recall_score(y, y_predict)
     print('Recall: %f' % recall)
     # f1: 2 tp / (2 tp + fp + fn)
-    f1 = f1_score(y_test, y_predict)
+    f1 = f1_score(y, y_predict)
     print('F1 score: %f' % f1)
 
 
@@ -129,27 +129,16 @@ def clean_images(folder_path, save_path):
 
 def predict(image_url):
     urllib.request.urlretrieve(image_url, "image.png")
-    pose = image_to_pose("image.png")
+    pose = image_to_pose("fall_dataset/images/fall/5_cropped_0.jpg")
     if len(pose) >= 1:
-        pose = pose[0][7:]
-        _pose = []
-        for i in range(17):  # 17 keypoints
-            _x = pose[3 * i]
-            _y = pose[3 * i + 1]
-            _pose.append(_x)
-            _pose.append(_y)
-        x = np.array(_pose)
-        scaler = MinMaxScaler()
-        x = scaler.fit_transform(x[:, np.newaxis])
-        x = [[[_x[0] for _x in x]]]
-        model = tf.keras.models.load_model('my_model')
-        y_predict = model.predict(x)
+        pose = pose[0]
+        y_predict = int(fall_detection(pose))
         print('y_predict', str(int(y_predict)))
-        return int(y_predict[0][0])
+        return int(y_predict)
     return -1
 
 
-# predict('https://media.istockphoto.com/id/1307214736/photo/full-length-portrait-of-a-corpulent-mature-man-posing.jpg?b=1&s=170667a&w=0&k=20&c=7BWU__SfBwYmX9coO-_cy-mCrE0RTDXWIku9Jikggcc=')
+# predict('https://st2.depositphotos.com/1000393/9807/i/950/depositphotos_98078022-stock-photo-man-falling-down.jpg')
 train(True)
 # clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
 # clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
