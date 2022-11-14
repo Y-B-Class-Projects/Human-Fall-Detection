@@ -4,7 +4,6 @@ import cv2
 import math
 from torchvision import transforms
 import numpy as np
-import telepot
 import os
 
 from tqdm import tqdm
