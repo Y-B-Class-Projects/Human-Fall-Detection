@@ -6,7 +6,6 @@ from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt
 from utils.plots import output_to_keypoint
 
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 weigths = torch.load('yolov7-w6-pose.pt', map_location=device)
 model = weigths['model']
@@ -14,6 +13,7 @@ _ = model.float().eval()
 
 if torch.cuda.is_available():
     model = model.half().to(device)
+
 
 def image_to_pose(path):
     image = cv2.imread(path)
