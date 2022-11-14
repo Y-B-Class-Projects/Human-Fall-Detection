@@ -95,6 +95,6 @@ def predict(image_url):
 
 
 # predict('https://st2.depositphotos.com/1000393/9807/i/950/depositphotos_98078022-stock-photo-man-falling-down.jpg')
-check_model_on_data(False)
+check_model_on_data(True)
 # clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
 # clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
