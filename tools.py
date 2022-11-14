@@ -44,7 +44,7 @@ def check_model_on_data(from_images=False):
     y = dataset[:, 1]
     y_predict = []
     for i in range(len(x)):
-        y_predict.append(int(fall_detection(x[i])))
+        y_predict.append(int(fall_detection(x[i])[0]))
 
     y_predict = list(y_predict)
     y = list(y)
@@ -95,6 +95,6 @@ def predict(image_url):
 
 
 # predict('https://st2.depositphotos.com/1000393/9807/i/950/depositphotos_98078022-stock-photo-man-falling-down.jpg')
-check_model_on_data(True)
+check_model_on_data(False)
 # clean_images('fall_dataset/images/fall', 'fall_dataset/images/cropped_images')
 # clean_images('fall_dataset/images/not-fall', 'fall_dataset/images/cropped_images')
