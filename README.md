@@ -36,6 +36,13 @@ Using our own data, we tested our model, and the results were, in our opinion, p
 
 For the video analysis we used Nvidia's Tesla K80 GPU, the system analyzes the videos at a reasonable speed of 15Fps.
 
+## How To Use
+- Clone this repository into your drive
+- Download the [YOLOv7-POSE](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt "YOLOv7-POSE") model into `Human-Fall-Detection` directory.
+- Install all the requirements with `pip install requirements.txt`
+- Run main.py file
+
+
 ## Examples
 Examples of videos collected from the Internet and analyzed by our system are shown below.
 
