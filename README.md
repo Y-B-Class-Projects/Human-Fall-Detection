@@ -38,6 +38,7 @@ For the video analysis we used Nvidia's Tesla K80 GPU, the system analyzes the v
 
 ## Examples
 Examples of videos collected from the Internet and analyzed by our system are shown below.
+
 These videos demonstrate how the model successfully and accurately recognizes human falls.
 
 ![](https://github.com/bakshtb/Human-Fall-Detection/blob/master/fall_dataset/results/video_1_keypoint.gif)
@@ -48,5 +49,6 @@ These videos demonstrate how the model successfully and accurately recognizes hu
 
 ## Possible Future Improvements
 Using a camera and RTSP protocol, our system may be upgraded to a real-time system.
+
 In order to alert human falls and save lives, the real-time system may be deployed and implemented in nursing homes, hospitals, and senior living facilities.
 
