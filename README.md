@@ -23,7 +23,7 @@ After looking at the pictures, we found that some of them labeld as "falling" b
 Unfortunately, the model did not succeed in learning on the new data either.
 The amount of the data, which contains approximately 500 photos, is likely the key factor in the network learning failure, but this is the only data that is available on the Internet.
 
-The original image database can be found [here](https://github.com/bakshtb/Human-Fall-Detection/tree/master/fall_dataset/oldp:// "here"), while the new image database we made can be found [here](https://github.com/bakshtb/Human-Fall-Detection/tree/master/fall_dataset/images "here").
+The original image database can be found [here](https://github.com/bakshtb/Human-Fall-Detection/tree/master/fall_dataset/old "here"), while the new image database we made can be found [here](https://github.com/bakshtb/Human-Fall-Detection/tree/master/fall_dataset/images "here").
 
 
 We considered creating a straightforward if-else-based model that would detect a fall in accordance with logical conditions regarding the relative location of the body parts after the LSTM-based network failed to learn from our image library.
