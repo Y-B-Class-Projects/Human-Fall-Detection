@@ -1,6 +1,6 @@
 # Human-Fall-Detection
 
-## The Projeect
+## The Project
 
 In this project, we developed a system using video analysis that can detect when person is falling.
 
