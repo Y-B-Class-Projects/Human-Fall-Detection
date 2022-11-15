@@ -49,6 +49,6 @@ These videos demonstrate how the model successfully and accurately recognizes hu
 ![](https://github.com/bakshtb/Human-Fall-Detection/blob/master/fall_dataset/results/video_6_keypoint.gif)
 
 ## Possible Future Improvements
-
-
+Using a camera and RTSP protocol, our system may be upgraded to a real-time system.
+In order to alert human falls and save lives, the real-time system may be deployed and implemented in nursing homes, hospitals, and senior living facilities.
 
