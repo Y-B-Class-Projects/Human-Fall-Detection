@@ -2,7 +2,7 @@
 
 ## The Project
 
-In this project, we developed a system using video analysis that can detect when person is falling.
+In this project, we developed a video analysis system that can detect events of human falling.
 
 A path to a folder containing video files is provided to the system, which then returns a new video with alarms regarding human falls.
 
