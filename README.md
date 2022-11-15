@@ -4,9 +4,7 @@
 
 In this project, we developed a video analysis system that can detect events of human falling.
 
-A path to a folder containing video files is provided to the system, which then returns a new video with alarms regarding human falls.
-
-The system scans through each frame of the video and, using the [YOLOv7-POSE](https://github.com/WongKinYiu/yolov7/tree/pose "YOLOv7-POSE") model, calculates and generates 17 key-points for each person, each of which represents the location of that person's body parts in that frame.
+The system receives video as input, scans each frame of the video, and then creates 17 key-points for each individual, each of which corresponds to a position of that person's body parts in that frame. This is done using the [YOLOv7-POSE](https://github.com/WongKinYiu/yolov7/tree/pose "YOLOv7-POSE") model.
 
 For example
 
