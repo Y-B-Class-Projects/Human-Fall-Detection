@@ -48,7 +48,8 @@ def falling_alarm(image, bbox):
 def get_pose_model():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("device: ", device)
-    weigths = torch.load('yolov7-w6-pose.pt', map_location=device)
+    # Fix: Set weights_only=False to properly load the full model
+    weigths = torch.load('yolov7-w6-pose.pt', map_location=device, weights_only=False)
     model = weigths['model']
     _ = model.float().eval()
     if torch.cuda.is_available():
