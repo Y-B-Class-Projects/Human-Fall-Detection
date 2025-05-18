@@ -7,12 +7,13 @@ from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt
 from utils.plots import output_to_keypoint, plot_skeleton_kpts
 
+
 # Load the model
 def get_pose_model():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("device:", device)
 
-    model = attempt_load('yolov7-w6-pose.pt', map_location=device)
+    model = attempt_load("yolov7-w6-pose.pt", map_location=device)
     model.eval()
 
     if torch.cuda.is_available():
@@ -22,6 +23,7 @@ def get_pose_model():
 
     return model, device
 
+
 # Preprocess the image to be compatible with YOLO
 def preprocess_image(image, model, device):
     img_size = 640
@@ -29,12 +31,17 @@ def preprocess_image(image, model, device):
     image = image[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB and HWC to CHW
     image = np.ascontiguousarray(image)
     image = torch.from_numpy(image).to(device)
-    image = image.half() if next(model.parameters()).dtype == torch.float16 else image.float()
+    image = (
+        image.half()
+        if next(model.parameters()).dtype == torch.float16
+        else image.float()
+    )
     image /= 255.0
 
     if image.ndimension() == 3:
         image = image.unsqueeze(0)
     return image
+
 
 # Logic to detect a fall based on keypoints
 def detect_fall(poses):
@@ -64,11 +71,21 @@ def detect_fall(poses):
 
     return False, None
 
+
 # Draw a bounding box and alert text
 def draw_fall_alert(image, bbox):
     x_min, y_min, x_max, y_max = map(int, bbox)
     cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
-    cv2.putText(image, 'Fall Detected!', (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+    cv2.putText(
+        image,
+        "Fall Detected!",
+        (x_min, y_min - 10),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.9,
+        (0, 0, 255),
+        2,
+    )
+
 
 # Main function
 def main():
@@ -85,19 +102,27 @@ def main():
         with torch.no_grad():
             output, _ = model(image)
 
-        output = non_max_suppression_kpt(output, 0.25, 0.65, nc=model.yaml['nc'], nkpt=model.yaml['nkpt'], kpt_label=True)
+        output = non_max_suppression_kpt(
+            output,
+            0.25,
+            0.65,
+            nc=model.yaml["nc"],
+            nkpt=model.yaml["nkpt"],
+            kpt_label=True,
+        )
         output = output_to_keypoint(output)
 
         is_fall, bbox = detect_fall(output)
         if is_fall:
             draw_fall_alert(frame, bbox)
 
-        cv2.imshow('Real-Time Fall Detection', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow("Real-Time Fall Detection", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
