@@ -2,6 +2,7 @@ import cv2
 import torch
 import numpy as np
 import math
+import time
 from models.experimental import attempt_load
 from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt
@@ -86,17 +87,33 @@ def draw_fall_alert(image, bbox):
         2,
     )
 
+def draw_fps(frame, prev_time):
+    current_time = time.time()
+    fps = 1 / (current_time - prev_time)
+    cv2.putText(
+        frame,
+        f"FPS: {fps:.2f}",
+        (10, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 255, 0),
+        2,
+    )
+    return frame, current_time
+
 
 # Main function
 def main():
     model, device = get_pose_model()
     cap = cv2.VideoCapture(0)
+    prev_time = time.time()
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
+        frame, prev_time = draw_fps(frame, prev_time)
         image = preprocess_image(frame, model, device)
 
         with torch.no_grad():
