@@ -41,6 +41,7 @@ For the video analysis we used Nvidia's Tesla K80 GPU, the system analyzes the v
 - Download the [YOLOv7-POSE](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt "YOLOv7-POSE") model into `Human-Fall-Detection` directory.
 - Install all the requirements with `pip install -r requirements.txt`
 - Run main.py file
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DevinduDh/Human-Fall-Detection/blob/master/colab-notebook.ipynb)
 
 
 ## Examples
