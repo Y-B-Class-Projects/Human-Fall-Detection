@@ -40,7 +40,8 @@ For the video analysis we used Nvidia's Tesla K80 GPU, the system analyzes the v
 - Clone this repository into your drive
 - Download the [YOLOv7-POSE](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt "YOLOv7-POSE") model into `Human-Fall-Detection` directory.
 - Install all the requirements with `pip install -r requirements.txt`
-- Run main.py file
+- `video.py`: Run fall detection on videos file
+- `realtime.py`: Run real-time fall detection via webcam
 
 
 ## Examples
@@ -54,8 +55,12 @@ These videos demonstrate how the model successfully and accurately recognizes hu
 ![](https://github.com/bakshtb/Human-Fall-Detection/blob/master/fall_dataset/results/video_5_keypoint.gif)
 ![](https://github.com/bakshtb/Human-Fall-Detection/blob/master/fall_dataset/results/video_6_keypoint.gif)
 
+## Work in Progress
+- Currently implementing real-time fall detection logic
+- **Short Term**: Optimize the if-else-based model using a time-sliding window
+- **Long Term**: Integrate a time-series model (e.g., LSTM) for more accurate detection
+
 ## Possible Future Improvements
-Using a camera and RTSP protocol, our system may be upgraded to a real-time system.
 
 In order to alert human falls and save lives, the real-time system may be deployed and implemented in nursing homes, hospitals, and senior living facilities.
 
