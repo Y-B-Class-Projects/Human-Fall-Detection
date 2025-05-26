@@ -5,6 +5,8 @@ from fall_core import (
 import cv2
 import os
 from tqdm import tqdm
+from collections import deque
+from config import WINDOW_SIZE, FPS, V_THRESH, ASPECT_RATIO_THRESH, DY_THRESH
 
 
 def process_video_file(video_path, output_dir):
@@ -15,6 +17,7 @@ def process_video_file(video_path, output_dir):
 
     model, device = get_pose_model()
     vid_out = prepare_vid_out(video_path, vid_cap, output_dir)
+    pose_window = deque(maxlen=WINDOW_SIZE)
 
     success, frame = vid_cap.read()
     frames = []
@@ -25,10 +28,24 @@ def process_video_file(video_path, output_dir):
     for image in tqdm(frames, desc=f"Processing {os.path.basename(video_path)}"):
         image, output = get_pose(image, model, device)
         _image = prepare_image(image)
-        is_fall, bbox = fall_detection(output)
-
-        if is_fall:
-            falling_alarm(_image, bbox)
+        if len(output) > 0:
+            pose_window.append(output)
+            if len(pose_window) == WINDOW_SIZE:
+                is_fall, bbox, debug_text, tag= fall_detection(
+                    pose_window,
+                    WINDOW_SIZE,
+                    FPS,
+                    V_THRESH,
+                    ASPECT_RATIO_THRESH,
+                    DY_THRESH
+                )
+                # debug
+                _image = cv2.putText(
+                    _image,  f"{tag}: {debug_text}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7, (0, 255, 0), 2
+                )
+                if is_fall:
+                    falling_alarm(_image, bbox)
         vid_out.write(_image[:,:,::-1])
 
     vid_out.release()
