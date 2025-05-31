@@ -24,7 +24,7 @@ def compute_center_velocity(pose_start, pose_end, fps, window_size):
     com_end = compute_center_of_mass(pose_end)
     dx = com_end[0] - com_start[0]
     dy = com_end[1] - com_start[1]
-    distance = math.sqrt(dx ** 2 + dy ** 2)
+    distance = math.sqrt(dx**2 + dy**2)
     time_elapsed = (window_size - 1) / fps
     velocity = distance / time_elapsed
     return min(velocity, 300.0), dy
@@ -50,7 +50,7 @@ def find_most_similar_pose(reference_pose, candidate_poses):
     best_pose = None
     for pose in candidate_poses:
         cx, cy = compute_center_of_mass(pose)
-        dist = (ref_cx - cx)**2 + (ref_cy - cy)**2
+        dist = (ref_cx - cx) ** 2 + (ref_cy - cy) ** 2
         if dist < min_dist:
             min_dist = dist
             best_pose = pose
@@ -101,7 +101,7 @@ def prepare_vid_out(video_path, vid_cap, output_dir):
 
     vid_write_image = letterbox(first_frame, 960, stride=64, auto=True)[0]
     resize_height, resize_width = vid_write_image.shape[:2]
-    video_name = os.path.basename(video_path).split('.')[0] + "_output.mp4"
+    video_name = os.path.basename(video_path).split(".")[0] + "_output.mp4"
     out_video_name = os.path.join(output_dir, video_name)
     print(f"[INFO] Writing output to: {out_video_name}")
 
@@ -114,7 +114,9 @@ def prepare_vid_out(video_path, vid_cap, output_dir):
     return out
 
 
-def fall_detection(pose_window, window_size, fps, v_thresh, aspect_ratio_thresh, dy_thresh):
+def fall_detection(
+    pose_window, window_size, fps, v_thresh, aspect_ratio_thresh, dy_thresh
+):
     if len(pose_window) < window_size:
         return False, None, None, None
 
@@ -131,14 +133,14 @@ def fall_detection(pose_window, window_size, fps, v_thresh, aspect_ratio_thresh,
         f"ar={ar_delta:.2f}/{aspect_ratio_thresh:.2f}"
     )
     print(f"[TRACE] {debug_text}")
-    
+
     cond_speed_drop = v > v_thresh and dy > dy_thresh
     cond_down_flat = dy > dy_thresh and ar_delta > aspect_ratio_thresh
 
     if cond_speed_drop or cond_down_flat:
         tag = (
-            ("SpeedDrop " if cond_speed_drop else "") +
-            ("DownFlat " if cond_down_flat else "")
+            ("SpeedDrop " if cond_speed_drop else "")
+            + ("DownFlat " if cond_down_flat else "")
         ).strip()
 
         xmin = pose_end[2] - pose_end[4] / 2
@@ -171,8 +173,10 @@ def falling_alarm(image, bbox):
         lineType=cv2.LINE_AA,
     )
 
+
 def draw_fps(frame, prev_time):
     import time
+
     curr_time = time.time()
     fps = 1 / (curr_time - prev_time)
     cv2.putText(
@@ -186,4 +190,3 @@ def draw_fps(frame, prev_time):
         cv2.LINE_AA,
     )
     return frame, curr_time
-
