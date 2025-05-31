@@ -60,6 +60,23 @@ These videos demonstrate how the model successfully and accurately recognizes hu
 - **Short Term**: Optimize the if-else-based model using a time-sliding window
 - **Long Term**: Integrate a time-series model (e.g., LSTM) for more accurate detection
 
+## Fall Detect Logic
+The fall detection logic uses the following parameters:
+
+| Parameter              | Description |
+|------------------------|-------------|
+| `FPS`                 | Frames per second. Used to calculate time and velocity. |
+| `WINDOW_SIZE`         | Number of frames in each analysis window. Defines how many frames are used to evaluate pose changes. |
+| `V_THRESH`            | Threshold for center-of-mass velocity. Movements faster than this are considered potentially abnormal. |
+| `DY_THRESH`           | Threshold for vertical (Y-axis) displacement of the center of mass. |
+| `ASPECT_RATIO_THRESH` | Threshold for change in aspect ratio (width/height) of the body. Indicates whether the body has become horizontal. |
+
+These values can be configured via a `.env` file.  
+If not provided, default values defined in the code will be used.
+
+> **Note:** This logic is still under development and subject to change as part of our ongoing implementation and validation process.
+
+
 ## Possible Future Improvements
 
 In order to alert human falls and save lives, the real-time system may be deployed and implemented in nursing homes, hospitals, and senior living facilities.
