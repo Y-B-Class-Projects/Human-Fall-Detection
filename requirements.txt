@@ -42,3 +42,5 @@ thop~=0.1.1.post2209072238
 
 telepot~=12.7
 torchmetrics~=0.10.2
+
+black==24.8.0

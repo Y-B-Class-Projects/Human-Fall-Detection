@@ -28,6 +28,8 @@ data/images/*
 !data/images/zidane.jpg
 !data/images/bus.jpg
 !data/*.sh
+!fall_dataset/ci_videos/**
+!.github/workflows/ci.yaml
 
 results*.csv
 
