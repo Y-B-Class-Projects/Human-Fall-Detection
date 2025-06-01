@@ -1,6 +1,10 @@
 from fall_core import (
-    get_pose_model, get_pose, prepare_image,
-    fall_detection, falling_alarm, draw_fps,
+    get_pose_model,
+    get_pose,
+    prepare_image,
+    fall_detection,
+    falling_alarm,
+    draw_fps,
 )
 import cv2
 import time
@@ -32,17 +36,22 @@ def process_realtime_camera():
                     FPS,
                     V_THRESH,
                     ASPECT_RATIO_THRESH,
-                    DY_THRESH
+                    DY_THRESH,
                 )
                 if debug_text:
                     _image = cv2.putText(
-                        _image,  f"{tag}: {debug_text}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7, (0, 255, 0), 2
+                        _image,
+                        f"{tag}: {debug_text}",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (0, 255, 0),
+                        2,
                     )
                 if is_fall:
                     falling_alarm(_image, bbox)
 
-        cv2.imshow("Real-Time Fall Detection", _image[:,:,::-1])
+        cv2.imshow("Real-Time Fall Detection", _image[:, :, ::-1])
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 

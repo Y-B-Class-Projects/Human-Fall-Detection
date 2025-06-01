@@ -4,12 +4,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def get_env_int(var_name, default):
     try:
         return int(os.getenv(var_name, default))
     except ValueError:
         print(f"Warning: {var_name} is not a valid int, using default {default}")
         return default
+
 
 def get_env_float(var_name, default):
     try:

@@ -1,6 +1,10 @@
 from fall_core import (
-    get_pose_model, get_pose, prepare_image, fall_detection,
-    falling_alarm, prepare_vid_out
+    get_pose_model,
+    get_pose,
+    prepare_image,
+    fall_detection,
+    falling_alarm,
+    prepare_vid_out,
 )
 import cv2
 import os
@@ -31,29 +35,38 @@ def process_video_file(video_path, output_dir):
         if len(output) > 0:
             pose_window.append(output)
             if len(pose_window) == WINDOW_SIZE:
-                is_fall, bbox, debug_text, tag= fall_detection(
+                is_fall, bbox, debug_text, tag = fall_detection(
                     pose_window,
                     WINDOW_SIZE,
                     FPS,
                     V_THRESH,
                     ASPECT_RATIO_THRESH,
-                    DY_THRESH
+                    DY_THRESH,
                 )
                 # debug
                 _image = cv2.putText(
-                    _image,  f"{tag}: {debug_text}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7, (0, 255, 0), 2
+                    _image,
+                    f"{tag}: {debug_text}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7,
+                    (0, 255, 0),
+                    2,
                 )
                 if is_fall:
                     falling_alarm(_image, bbox)
-        vid_out.write(_image[:,:,::-1])
+        vid_out.write(_image[:, :, ::-1])
 
     vid_out.release()
     vid_cap.release()
 
 
 if __name__ == "__main__":
-    videos_path = "fall_dataset/videos"
+    if os.environ.get("CI_MODE") == "1":
+        videos_path = "fall_dataset/ci_videos"
+        print("[CI MODE] Only running on CI test videos...")
+    else:
+        videos_path = "fall_dataset/videos"
     output_dir = "output_videos"
     os.makedirs(output_dir, exist_ok=True)
 

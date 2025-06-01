@@ -1,0 +1,39 @@
+name: Code Quality and Tests
+
+on:
+  push:
+    branches:
+      - main
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pr_checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Download YOLOv7 pose model
+        run: |
+          curl -L -o yolov7-w6-pose.pt https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt
+
+      - name: Check Python script for errors
+        run: |
+          CI_MODE=1 python video.py
+
+      - name: Run Black to check code style
+        run: |
+          black --check .
