@@ -22,7 +22,8 @@ class PersonFallTracker:
         self.dy_thresh = dy_thresh
 
     def add_pose(self, pose):
-        self.pose_window.append(pose)
+        if self.is_pose_complete(pose):
+            self.pose_window.append(pose)
 
     def is_ready(self):
         return len(self.pose_window) == self.window_size
@@ -64,13 +65,13 @@ class PersonFallTracker:
         v, dy = self.compute_velocity(p1, p2)
         ar_delta = self.compute_ar_delta(p1, p2)
 
-        cond_v = v > self.v_thresh and dy > self.dy_thresh
-        cond_ar = dy > self.dy_thresh and ar_delta > self.ar_thresh
+        ar_start = self._safe_aspect_ratio(p1)
+        ar_end = self._safe_aspect_ratio(p2)
 
         tag = []
-        if cond_v:
+        if v > self.v_thresh and dy > self.dy_thresh and ar_end > 0.1:
             tag.append("SpeedDrop")
-        if cond_ar:
+        if dy > self.dy_thresh and ar_delta > self.ar_thresh:
             tag.append("DownFlat")
 
         debug = (
@@ -89,6 +90,23 @@ class PersonFallTracker:
             )
 
         return False, None, debug, ""
+
+    def _safe_aspect_ratio(self, p):
+        length = len(p) - (len(p) % 3)
+        x = [p[i] for i in range(0, length, 3)]
+        y = [p[i + 1] for i in range(0, length, 3)]
+        w, h = max(x) - min(x), max(y) - min(y)
+        return w / h if h else 0
+
+    def is_pose_complete(self, pose, required_joints=(10, 11, 13, 14, 22, 23, 25, 26)):
+        try:
+            for idx in required_joints:
+                x, y = pose[idx], pose[idx + 1]
+                if x == 0 or y == 0:
+                    return False
+            return True
+        except IndexError:
+            return False
 
 
 class FallDetectorMulti:
@@ -109,6 +127,46 @@ class FallDetectorMulti:
         self.ar_thresh = ar_thresh
         self.dy_thresh = dy_thresh
         self.next_id = 1
+
+    def draw_debug_overlay(self, image, results):
+        for tid, pose, tag, debug, bbox, v, dy, ar in results:
+            cx, cy = int(pose[2]), int(pose[3])
+
+            cv2.putText(
+                image,
+                f"ID: {tid}",
+                (cx, cy - 20),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 255),
+                2,
+            )
+
+            debug_text = (
+                (f"v={v:.1f}/{self.v_thresh:.1f}" if v is not None else "v=N/A")
+                + (
+                    f", dy={dy:.1f}/{self.dy_thresh:.1f}"
+                    if dy is not None
+                    else ", dy=N/A"
+                )
+                + (
+                    f", ar={ar:.2f}/{self.ar_thresh:.2f}"
+                    if ar is not None
+                    else ", ar=N/A"
+                )
+            )
+
+            cv2.putText(
+                image,
+                debug_text,
+                (cx, cy + 20),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                (100, 255, 100),
+                1,
+            )
+
+        return image
 
     def load_model(self, path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -160,7 +218,7 @@ class FallDetectorMulti:
 
         for tid, tracker in trackers.items():
             if tid in assigned_ids:
-                continue  # 🚫 本幀已被用過
+                continue
 
             if len(tracker.pose_window) == 0:
                 continue
@@ -206,6 +264,8 @@ class FallDetectorMulti:
             people, processed_frame = self.get_pose(frame)
             _image = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
             assigned_ids = set()
+            results = []
+
             for pose in people:
                 tid = self.match_pose_to_tracker(pose, self.trackers, assigned_ids)
                 if tid is None:
@@ -221,20 +281,19 @@ class FallDetectorMulti:
                 self.trackers[tid].add_pose(pose)
                 self.trackers[tid].last_update = time.time()
 
+                tag = debug = bbox = None
+                v = dy = ar = None
+
                 if self.trackers[tid].is_ready():
                     is_fall, bbox, debug, tag = self.trackers[tid].check_fall()
-                    if tag:
-                        print(f"[{tid}] {tag} → {debug}")
-                        cv2.putText(
-                            _image,
-                            f"{tid} {tag}: {debug}",
-                            (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.6,
-                            (0, 255, 0),
-                            2,
-                        )
-                    if is_fall:
+                    p1, p2 = (
+                        self.trackers[tid].pose_window[0],
+                        self.trackers[tid].pose_window[-1],
+                    )
+                    v, dy = self.trackers[tid].compute_velocity(p1, p2)
+                    ar = self.trackers[tid].compute_ar_delta(p1, p2)
+
+                    if is_fall and bbox:
                         x1, y1, x2, y2 = map(int, bbox)
                         cv2.rectangle(_image, (x1, y1), (x2, y2), (255, 0, 0), 4)
                         cv2.putText(
@@ -246,16 +305,11 @@ class FallDetectorMulti:
                             (0, 0, 255),
                             2,
                         )
+
                 cx, cy = int(pose[2]), int(pose[3])
-                cv2.putText(
-                    _image,
-                    f"ID: {tid}",
-                    (cx, cy - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 255, 255),
-                    2,
-                )
+                results.append((tid, pose, tag, debug, bbox, v, dy, ar))
+
+            _image = self.draw_debug_overlay(_image, results)
             writer.write(_image)
 
         cap.release()
@@ -279,11 +333,11 @@ class FallDetectorMulti:
         )
         return frame, curr_time
 
-    def handle_frame(self, frame, prev_time=None):
+    def handle_frame(self, frame, prev_time=None, writer=None):
         people, processed_frame = self.get_pose(frame)
         _image = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
-        results = []  # for visualization (tid, pose, tag, debug, bbox)
+        results = []
         for pose in people:
             tid = self.match_pose_to_tracker(pose, self.trackers)
             if tid is None:
@@ -292,6 +346,7 @@ class FallDetectorMulti:
             self.trackers[tid].append(pose)
 
             tag = debug = bbox = None
+            v = dy = ar_delta = None
             if len(self.trackers[tid]) == self.window_size:
                 p1, p2 = self.trackers[tid][0], self.trackers[tid][-1]
                 v, dy = self.compute_velocity(p1, p2)
@@ -314,46 +369,17 @@ class FallDetectorMulti:
                         int(p2[2] + p2[4] / 2),
                         int(p2[3] + p2[5] / 2),
                     )
-            results.append((tid, pose, tag, debug, bbox))
 
-        for tid, pose, tag, debug, bbox in results:
-            cx, cy = int(pose[2]), int(pose[3])
-            cv2.putText(
-                _image,
-                f"ID: {tid}",
-                (cx, cy - 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (0, 255, 255),
-                2,
-            )
-            cv2.putText(
-                _image,
-                debug,
-                (cx, cy - 40),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 255, 0),
-                1,
-            )
-            if tag and bbox:
-                x1, y1, x2, y2 = bbox
-                print(f"[{tid}] {tag} → {debug}")
-                cv2.rectangle(_image, (x1, y1), (x2, y2), (255, 0, 0), 4)
-                cv2.putText(
-                    _image, "FALL DETECTED", (x1, y1 - 10), 0, 0.8, (0, 0, 255), 2
-                )
-                cv2.putText(
-                    _image,
-                    f"{tid} {tag}",
-                    (x1, y1 - 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 255, 0),
-                    2,
-                )
+            results.append((tid, pose, tag, debug, bbox, v, dy, ar_delta))
+
+        _image = self.draw_debug_overlay(_image, results)
 
         if prev_time is not None:
             _image, new_time = self.draw_fps(_image, prev_time)
+            if writer:
+                writer.write(_image)
             return _image, new_time
-        return _image
+        else:
+            if writer:
+                writer.write(_image)
+            return _image
