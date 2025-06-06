@@ -98,13 +98,22 @@ class PersonFallTracker:
         w, h = max(x) - min(x), max(y) - min(y)
         return w / h if h else 0
 
-    def is_pose_complete(self, pose, required_joints=(10, 11, 13, 14, 22, 23, 25, 26)):
+    def is_pose_complete(self, pose, required_joints=(11, 14, 23, 26)):
         try:
+            complete = True
+            visible_joints = 0
+            length = len(pose) - (len(pose) % 3)
+
+            for i in range(0, length, 3):
+                x, y, conf = pose[i], pose[i + 1], pose[i + 2]
+                if conf > 0.2:
+                    visible_joints += 1
+
             for idx in required_joints:
-                x, y = pose[idx], pose[idx + 1]
-                if x == 0 or y == 0:
-                    return False
-            return True
+                if pose[idx] == 0 or pose[idx + 1] == 0:
+                    complete = False
+
+            return complete and visible_joints >= 10
         except IndexError:
             return False
 
@@ -170,7 +179,7 @@ class FallDetectorMulti:
 
     def load_model(self, path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        weights = torch.load(path, map_location=device)
+        weights = torch.load(path, map_location=device, weights_only=False)
         model = weights["model"].float().eval()
         return (model.half().to(device) if torch.cuda.is_available() else model), device
 

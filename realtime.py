@@ -1,6 +1,6 @@
 import cv2
 import time
-from fall_detector_multi import FallDetectorMulti
+from fall_core import FallDetectorMulti
 from config import FPS, WINDOW_SIZE, V_THRESH, DY_THRESH, ASPECT_RATIO_THRESH
 
 
@@ -20,7 +20,6 @@ def process_realtime_camera():
         if not ret:
             break
 
-        # ✅ 改成使用 core.py 的 handle_frame()
         _image, prev_time = detector.handle_frame(frame, prev_time)
 
         cv2.imshow("Real-Time Fall Detection", _image)
