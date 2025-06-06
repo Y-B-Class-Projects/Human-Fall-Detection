@@ -8,7 +8,7 @@ def process_video():
         videos_path = "fall_dataset/ci_videos"
         print("[CI MODE] Only running on CI test videos...")
     else:
-        videos_path = "fall_dataset/test_videos"
+        videos_path = "fall_dataset/videos"
 
     output_dir = "output_videos"
     os.makedirs(output_dir, exist_ok=True)
